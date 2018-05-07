@@ -4,6 +4,7 @@ const cheerio = require('cheerio')
 const request = require('request')
 const fs = require('fs')
 const app = express()
+const yearsUrl = "http://www.caa.gov.tw/big5/content/index.asp?sno=927"
 
 
 app.use(express.static('views'))
@@ -15,12 +16,13 @@ app.use("/users", function(req, res, next){
 
 app.get('/scrap', function(req, res) {
     setAirlinesLink();
+    res.send('OK!')
 })
 
 const setAirlinesLink = function () {
     console.log("1");
     request({
-      url: "http://www.caa.gov.tw/big5/content/index.asp?sno=927", 
+      url: yearsUrl, 
       method: "GET"
     }, function (error, response, body) {
       if (error || !body) {
@@ -30,15 +32,16 @@ const setAirlinesLink = function () {
       }
       console.log("3");
       const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body
-      const result = []; // 建立一個儲存結果的容器
-      const tableYears = $("td > strong"); 
+    //   const tableYears = $("td > strong > a"); 
       
       console.log("4");
+      var yearsData = myScript.getYearsLink($);
 
-      myScript.getYearsLink(tableYears);
-    //   console.log(table);
 
-      fs.writeFileSync("result.json", tableYears);
+      // for updating , continueing..
+      yearsData = myScript.getYearContent(yearsData);
+
+    //   fs.writeFileSync("result.json", tableYears);
       
     });
   };
