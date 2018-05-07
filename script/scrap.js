@@ -22,54 +22,50 @@ var self = module.exports = {
             yearLinks[year] = yearLinkData;
         });
 
-
-
-
-
-     
         return yearLinks;
     },
 
-    getYearContent: function(yearLinks){       
-        // for test, will be removed
-        var test;
-        var yearData = yearData;
-        test = yearLinks['2010'].link;      
-        // console.log(test);
-        request({
-            url: test, 
-            method: "GET"
-          }, function (error, response, body) {
-            if (error || !body) {
-              console.log("6");
-              console.log(error);
-              return;
-            } 
 
-            // for test
-            const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body
-            links = $('body > a > table > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td > table:nth-child(1) > tbody > tr > td > table:nth-child(2) > tbody > tr:nth-child(3) > td > table > tbody > tr:nth-child(1) > td'); 
-            monthsDataRaw = $(links).attr('id', 'forUpdate');
-            testStr = monthsDataRaw.html();
-            testStr = testStr.replace("<br>", "<br><p>");
-            testStr = testStr.replace("<p></p>", "</p>");
-            const yearLinks = [];
-            var $2 = cheerio.load(testStr, {ignoreWhitespace: true, decodeEntities: false})
-            links = $2('p')
-            $2(links).each(function(i, elem) {
-                yearStr = $2(this).text();   
-                yearLinks[i] = $2(elem).html().replace(/\n/g, '');
-              }); 
+    // promise sample
+    getPromiseYearContent: function (yearsLinks, year) {
+        return new Promise(function (resolve, reject) {
+            var yearLink;
+            var yearData = yearData;
+            yearLink = yearsLinks[year].link;      
+            // console.log(test);
+            request({
+                url: yearLink, 
+                method: "GET"
+            }, function (error, response, body) {
+                if (error || !body) {
+                console.log("6");
+                console.log(error);
+                reject(error);
+                } 
 
-            console.log('***');
-            var yearData = self.getYearExcelLinkDict(yearLinks, yearStr);
-            // fs.writeFileSync("monthTest.json", monthsDataRaw);  
+                // for test
+                const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body
+                links = $('body > a > table > tbody > tr:nth-child(2) > td > table > tbody > tr:nth-child(2) > td > table:nth-child(1) > tbody > tr > td > table:nth-child(2) > tbody > tr:nth-child(3) > td > table > tbody > tr:nth-child(1) > td'); 
+                monthsDataRaw = $(links).attr('id', 'forUpdate');
+                testStr = monthsDataRaw.html();
+                testStr = testStr.replace("<br>", "<br><p>");
+                testStr = testStr.replace("<p></p>", "</p>");
+                const yearLinks = [];
+                var $2 = cheerio.load(testStr, {ignoreWhitespace: true, decodeEntities: false})
+                links = $2('p')
+                $2(links).each(function(i, elem) {
+                    yearStr = $2(this).text();   
+                    yearLinks[i] = $2(elem).html().replace(/\n/g, '');
+                }); 
+
+                console.log('***');
+                var yearData = self.getYearExcelLinkDict(yearLinks, yearStr);           
+                // console.log(yearData);
+        
+                resolve(yearData);
+            });
             
-            console.log(yearData);
-            // console.log('***');
-          });
-     
-        return yearData
+        });
     },
 
     getYearExcelLinkDict: function(yearLinks, yearStr){

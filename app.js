@@ -31,23 +31,44 @@ const setAirlinesLink = function () {
         return;
       }
       console.log("3");
-      const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body
-    //   const tableYears = $("td > strong > a"); 
-      
+      const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body     
       console.log("4");
-      var yearsData = myScript.getYearsLink($);
+      var yearsLink = myScript.getYearsLink($);
 
+      // console.log("***********");
+      // console.log(yearsLink);
+      // console.log("***********");
 
-      // for updating , continueing..
-      yearsData = myScript.getYearContent(yearsData);
+      // get all promise object
+      var yearsStrArr = Object.keys(yearsLink);
+      var yearsPromiseFunctionParseArr = [];
+      var arrayLength = yearsStrArr.length;
+      for (var yearIdx = 0; yearIdx < arrayLength; yearIdx++) {
+        yearsPromiseFunctionParseArr.push(myScript.getPromiseYearContent(yearsLink, yearsStrArr[yearIdx]));
+      }
 
-    //   fs.writeFileSync("result.json", tableYears);
+      Promise.all(yearsPromiseFunctionParseArr).then((yearsMonthesJsonArray) => {
+        // console.log("--------------------");
+        // console.log(JSON.stringify(yearsMonthesJsonArray));
+        // console.log("--------------------");
+        mergeYearsMonthesJson(yearsLink, yearsMonthesJsonArray);
+        // need merge to one json
       
+      }).catch((err) => {
+        console.log(err.message)
+      })
     });
+
+
+
+
   };
 
-// setAirlinesLink();
 
+// const mergeYearsMonthesJson = function(yearsLink, yearsMonthesJsonArray){
+  
+
+// }
 
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
