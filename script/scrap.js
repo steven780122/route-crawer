@@ -57,11 +57,8 @@ var self = module.exports = {
                     yearStr = $2(this).text();   
                     yearLinks[i] = $2(elem).html().replace(/\n/g, '');
                 }); 
-
-                console.log('***');
                 var yearData = self.getYearExcelLinkDict(yearLinks, yearStr);           
-                // console.log(yearData);
-        
+ 
                 resolve(yearData);
             });
             
@@ -70,10 +67,11 @@ var self = module.exports = {
 
     getYearExcelLinkDict: function(yearLinks, yearStr){
         var excelLink = '';
-        console.log('8');
+        // console.log('8');
         // console.log(yearLinks);
         var monthesData = {};
         var finalYearData = {};
+
         // loop every month
         var arrayLength = yearLinks.length;
         for (var i = 0; i < arrayLength; i++) {
@@ -119,9 +117,9 @@ var self = module.exports = {
             monthLink.link = excelLink;
             monthesData[month] = monthLink;
         }
-        
-        finalYearData[this.setMinguoToCommonYear(year)] = monthesData; 
-        // console.log(monthesData);
+        var monthesData2 = {};
+        monthesData2["Data"] = monthesData;
+        finalYearData[this.setMinguoToCommonYear(year)] = monthesData2;
  
         return finalYearData;        
     },
