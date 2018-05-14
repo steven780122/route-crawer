@@ -2,9 +2,14 @@ const myScript = require('./script/scrap');
 const express = require('express')
 const cheerio = require('cheerio')
 const request = require('request')
+const http = require('http')
 const fs = require('fs')
+
+const wget = require('node-wget');
+const exec = require('child_process').exec;  
 const app = express()
 const yearsUrl = "http://www.caa.gov.tw/big5/content/index.asp?sno=927"
+const allYearsDataFileName = "allYearsData.json"
 
 
 app.use(express.static('views'))
@@ -14,6 +19,63 @@ app.use("/users", function(req, res, next){
 });
 
 
+app.get('/download/', function(req, res) {
+  var year = "2018";
+  var month = "01";
+
+  fs.stat(allYearsDataFileName, function(err, stat) {
+    if(err == null) {
+      console.log('File exists');
+      var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
+      // console.log(JSON.stringify(data));
+      var downloadLink = data[year]["Data"][month]["link"]
+
+      console.log(data[year]["Data"][month]["link"]);
+      // download(downloadLink, './test.xls');
+      download_file_wget(encodeURI(downloadLink), './downloads/test');
+
+      res.send('Get file done.');
+    } else if(err.code == 'ENOENT') {
+        // file does not exist
+        fs.writeFile('log.txt', 'Some log\n');
+    } else {
+        console.log('Some other error: ', err.code);
+    }
+});
+
+})
+
+
+var download_file_wget = function(file_url, DOWNLOAD_DIR) {    
+  wget({
+      url:  file_url,
+      dest: DOWNLOAD_DIR,      // destination path or path with filenname, default is ./
+      timeout: 2000       // duration to wait for request fulfillment in milliseconds, default is 2 seconds
+    }, function(err, data) {        // data: { headers:{...}, filepath:'...' }
+    console.log('--- dry run data:');
+    console.log(data); // '/tmp/package.json'
+    }
+  );
+};  
+
+
+
+
+
+// ori
+// const download = function(url, dest, cb) {
+//   var file = fs.createWriteStream(dest);
+//   var request = http.get(url, function(response) {
+//     response.pipe(file);
+//     file.on('finish', function() {
+//       file.close(cb);  // close() is async, call cb after close completes.
+//     });
+//   }).on('error', function(err) { // Handle errors
+//     fs.unlink(dest); // Delete the file async. (But we don't check the result)
+//     if (cb) cb(err.message);
+//   });
+// };
+
 app.get('/scrap', function(req, res) {
   var allYearsJson = {};  
   // allYearsJson = setAirlinesLink();
@@ -22,7 +84,12 @@ app.get('/scrap', function(req, res) {
     allYearsJson = getData;
     console.log("*******************")
     console.log(allYearsJson);
-    res.send('Scrape done!!');
+
+    fs.writeFileSync(allYearsDataFileName, allYearsJson);
+
+
+    res.send(allYearsJson);
+    // res.send('Scrape done!!');
     // res.send('OK!')
   }).catch((err) => {
     console.log(err.message)
@@ -31,6 +98,7 @@ app.get('/scrap', function(req, res) {
 
   // res.send('OK!')
 })
+
 
 const setAirlinesLink = function () {
   return new Promise(function (resolve, reject) {

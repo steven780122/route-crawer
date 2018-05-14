@@ -29,9 +29,8 @@ var self = module.exports = {
     // promise sample
     getPromiseYearContent: function (yearsLinks, year) {
         return new Promise(function (resolve, reject) {
-            var yearLink;
-            var yearData = yearData;
-            yearLink = yearsLinks[year].link;      
+            var yearLink = yearsLinks[year].link;;
+            var yearData = yearData;     
             // console.log(test);
             request({
                 url: yearLink, 
