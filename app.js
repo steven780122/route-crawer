@@ -100,11 +100,7 @@ const downloadByPromise = function(url, dest){
       .pipe(fs.createWriteStream(dest))
       .on('close', function(){
         console.log('Finished Downloading ' + dest);
-        // resolve(dest + " resolve OK!");
       });
-      // .on('close', function(){console.log('Finished Downloading' + dest)});
-
-
       resolve(dest + " OK!");
     }catch(err){
       console.log(err);
@@ -113,20 +109,7 @@ const downloadByPromise = function(url, dest){
   })
 }
 
-
-// by fs
-const downloadByFs2 = function(url, dest){
-  try{
-    request.get(url)
-    .on('error', function(err) {console.log(err)} )
-    .pipe(fs.createWriteStream(dest))
-    .on('close', function(){console.log('Finished Downloading' + dest)});
-  }catch(err){
-    console.log(err);
-  }
-};
-
-// by wget 
+// download by wget 
 // var download_file_wget = function(file_url, DOWNLOAD_DIR) {    
 //   wget({
 //       url:  file_url,
@@ -141,28 +124,31 @@ const downloadByFs2 = function(url, dest){
 
 app.get('/scrap', function(req, res) {
   var allYearsJson = {};  
-  // allYearsJson = setAirlinesLink();
-  Promise.all([setAirlinesLink()]).then((getData) => {
-    // need merge to one json
-    allYearsJson = getData;
-    console.log("*******************")
-    console.log(allYearsJson);
-
-    fs.writeFileSync(allYearsDataFileName, allYearsJson);
+  setScrapPromise().then((allYearsJson) => {
     res.send(allYearsJson);
-    // res.send('OK!')
   }).catch((err) => {
-    console.log(err.message)
-    res.send(err.message)
+    res.send(err);
   });
-  // res.send('OK!')
 })
+
+
+const setScrapPromise = function(){
+  return new Promise(function (resolve, reject) {
+    Promise.all([setAirlinesLink()]).then((getData) => {
+      allYearsJson = getData;
+      fs.writeFileSync(allYearsDataFileName, allYearsJson);
+      resolve(allYearsJson);
+    }).catch((err) => {
+      console.log(err.message)
+      reject(err);
+    });
+  })
+}
 
 
 const setAirlinesLink = function () {
   return new Promise(function (resolve, reject) {
     var allYearsJson = {};  
-    console.log("1");
       request({
         url: yearsUrl, 
         method: "GET"

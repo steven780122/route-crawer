@@ -7,7 +7,6 @@ const uniqueMonthBaseUrl = "http://www.caa.gov.tw/"
 var self = module.exports = {
     getYearsLink: function($) {
         var yearLinks = new Object();
-        console.log("5");
         // get links for years
         links = $('td > strong > a'); 
         var _ = this;
@@ -111,15 +110,7 @@ var self = module.exports = {
             var matchLinkRaw = /<a\s+(?:[^>]*?\s+)?href="([^"]*)"/g;
             var matchLink = matchLinkRaw.exec(excelRawLink);
             excelLink = matchLink[1];
-
-            // var removeRuleRaw = /(\.\.\/)+/g;
-            // var removeRule = removeRuleRaw.exec(excelLink);
-            // var removeLink = removeRule[1];
-
-
-            // excelLink = uniqueMonthBaseUrl + excelLink;
             excelLink = uniqueMonthBaseUrl + excelLink.replace(/\.\.\//g, "");
-            // excelLink = uniqueMonthBaseUrl + excelLink.replace("../../", "");
             var monthLink = {};
             monthLink.link = excelLink;
             monthesData[month] = monthLink;
