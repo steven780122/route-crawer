@@ -19,14 +19,20 @@ app.use("/users", function(req, res, next){
 
 
 app.get('/download/', function(req, res) {
-  var year = "2018";
-  var month = "03";
+  var year = "2016";
+  var month = "02";
+
+  // Add scrap first....
+
 
   fs.stat(allYearsDataFileName, function(err, stat) {
     if(err == null) {
       console.log('File exists');
       var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
 
+      // download by promise
+
+      var downloadPromiseArr = [];
       for(year in data){
         console.log(year);
         console.log("********");  
@@ -39,25 +45,37 @@ app.get('/download/', function(req, res) {
           var filename =  downloadLink.split('/').pop();
           var dest = './downloads/' + year + month + '.' + finalFileType;
           console.log('Downloading ' + filename);
-          downloadByFs2(encodeURI(downloadLink), dest, function(){console.log('Finished Downloading' + dest)});
-          
+          // downloadByFs2(encodeURI(downloadLink), dest, function(){console.log('Finished Downloading' + dest)});
+          // downloadByFs2(encodeURI(downloadLink), dest);
+
+          downloadPromiseArr.push(downloadByPromise(encodeURI(downloadLink), dest));
         }
-  
       }
 
-      res.send('Get file done.');
+      // console.log(downloadByPromise);
 
+      Promise.all(downloadPromiseArr).then((downLoadInfo) => {
+        // need merge to one json   
+        console.log(downLoadInfo);  
+        res.send('Get file done.');
+        // res.send('OK!')
+      }).catch((err) => {
+        console.log(err.message)
+        res.send(err.message)
+      });
+
+
+      // for test
       // var downloadLink = data[year]["Data"][month]["link"];
       // console.log(downloadLink);
 
       // var finalFileType = downloadLink.substr(downloadLink.lastIndexOf('.') + 1);
       // var filename =  downloadLink.split('/').pop();
       // var dest = './downloads/' + year + month + '.' + finalFileType;
-      // console.log('Downloading ' + filename);
-      // downloadByFs2(encodeURI(downloadLink), dest, function(){console.log('Finished Downloading' + filename)});
+      // console.log('Downloading ' + dest);
+      // // downloadByFs2(encodeURI(downloadLink), dest, function(){console.log('Finished Downloading' + dest)});
+      // downloadByFs2(encodeURI(downloadLink), dest);
       // res.send('Get file done.');
-
-
     } else if(err.code == 'ENOENT') {
         // file does not exist
         fs.writeFile('log.txt', 'Some log\n');
@@ -68,18 +86,44 @@ app.get('/download/', function(req, res) {
 })
 
 
-// const getAllLinkwithYearMonth()
+
+// download by promise
+const downloadByPromise = function(url, dest){
+  return new Promise(function (resolve, reject) {
+    try{
+      request.get(url)
+      .on('error', function(err) {
+        console.log(err);  
+        console.log('Unfinishing Downloading ' + dest);
+        reject(dest + " promise fail!");
+      })
+      .pipe(fs.createWriteStream(dest))
+      .on('close', function(){
+        console.log('Finished Downloading ' + dest);
+        // resolve(dest + " resolve OK!");
+      });
+      // .on('close', function(){console.log('Finished Downloading' + dest)});
 
 
-
+      resolve(dest + " OK!");
+    }catch(err){
+      console.log(err);
+      reject(dest + " promise fail!");
+    }
+  })
+}
 
 
 // by fs
-const downloadByFs2 = function(url, dest, callback){
-  request.get(url)
-  .on('error', function(err) {console.log(err)} )
-  .pipe(fs.createWriteStream(dest))
-  .on('close', callback);
+const downloadByFs2 = function(url, dest){
+  try{
+    request.get(url)
+    .on('error', function(err) {console.log(err)} )
+    .pipe(fs.createWriteStream(dest))
+    .on('close', function(){console.log('Finished Downloading' + dest)});
+  }catch(err){
+    console.log(err);
+  }
 };
 
 // by wget 
@@ -106,13 +150,11 @@ app.get('/scrap', function(req, res) {
 
     fs.writeFileSync(allYearsDataFileName, allYearsJson);
     res.send(allYearsJson);
-    // res.send('Scrape done!!');
     // res.send('OK!')
   }).catch((err) => {
     console.log(err.message)
     res.send(err.message)
   });
-
   // res.send('OK!')
 })
 
@@ -159,14 +201,9 @@ const mergeYearsMonthesJson = function(yearsLink, yearsMonthesJsonArray){
   for (var yearIdx = 0; yearIdx < arrayLength; yearIdx++) {
     Object.assign(finalYearsDataDict, yearsMonthesJsonArray[yearIdx]);
   }
-
   finalYearsDataDict = mergeDict(finalYearsDataDict, yearsLink);
 
   return JSON.stringify(finalYearsDataDict);
-
-  // console.log("****************")
-  // console.log(JSON.stringify(finalYearsDataDict));
-
 }
 
 const mergeDict = function(a, b) {

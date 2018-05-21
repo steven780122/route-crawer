@@ -111,7 +111,15 @@ var self = module.exports = {
             var matchLinkRaw = /<a\s+(?:[^>]*?\s+)?href="([^"]*)"/g;
             var matchLink = matchLinkRaw.exec(excelRawLink);
             excelLink = matchLink[1];
-            excelLink = uniqueMonthBaseUrl + excelLink.replace("../../", "");
+
+            // var removeRuleRaw = /(\.\.\/)+/g;
+            // var removeRule = removeRuleRaw.exec(excelLink);
+            // var removeLink = removeRule[1];
+
+
+            // excelLink = uniqueMonthBaseUrl + excelLink;
+            excelLink = uniqueMonthBaseUrl + excelLink.replace(/\.\.\//g, "");
+            // excelLink = uniqueMonthBaseUrl + excelLink.replace("../../", "");
             var monthLink = {};
             monthLink.link = excelLink;
             monthesData[month] = monthLink;
