@@ -27,11 +27,7 @@ app.get('/downloadAll/', function(req, res) {
       if(err == null) {
         try{
           console.log('File exists');
-          // var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
-          
-          // console.log(JSON.parse(allYearsJson));
           var data = JSON.parse(allYearsJson);
-    
           // download by promise
           var downloadPromiseArr = [];
           for(year in data){  
@@ -80,22 +76,11 @@ app.get('/downloadByYearMonth/:year/:month', function(req, res) {
     fs.stat(allYearsDataFileName, function(err, stat) {
       if(err == null) {
         try{
-          console.log('File exists');
-          
-          
+          console.log('File exists');          
           var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
-          // var downloadLink = data[year]["Data"][month]["link"];
-          // console.log(downloadLink);
-          // var finalFileType = downloadLink.substr(downloadLink.lastIndexOf('.') + 1);
-          // var filename =  downloadLink.split('/').pop();
-          // var dest = './downloads/' + year + month + '.' + finalFileType;
-          // console.log('Downloading ' + dest);
-          var downloadLink = processDownloadLink(data, year, month).downloadLink;
-          var dest = processDownloadLink(data, year, month).dest;
-          
+          var {downloadLink, dest} = processDownloadLink(data, year, month)
           downloadByFs2(encodeURI(downloadLink), dest);
           res.send('Get file done.');
-
         }catch(err){
           console.log(err);
           res.send(err.toString());
@@ -129,9 +114,7 @@ const downloadByNewerData = function(newerData){
         // var filename =  downloadLink.split('/').pop();
         // var dest = './downloads/' + year + month + '.' + finalFileType;
         // console.log('Downloading ' + filename);  
-        console.log("XDDDDD")
-        var downloadLink = processDownloadLink(newerData, year, month).downloadLink;
-        var dest = processDownloadLink(newerData, year, month).dest;
+        var {downloadLink, dest} = processDownloadLink(newerData, year, month)
         downloadPromiseArr.push(downloadByPromise(encodeURI(downloadLink), dest));
       }
     }
@@ -164,8 +147,6 @@ const processDownloadLink = function(newerData, year, month){
   
   return {downloadLink:downloadLink, dest:dest};
 }
-
-
 
 
 // by fs
@@ -234,28 +215,26 @@ app.get('/scrap', function(req, res) {
 
 const getNewerData = function(){
   var newerData = {};
-
-  // read from file
-
   // scrap all and set new file
-  var allYearsJson = {}; 
+  var resultData = {}; 
   var oriYearsData = {};
-  setScrapPromise().then((resultData) => {
+  setScrapPromise().then((allYearsJson) => {
+    
     oriYearsData = JSON.parse(fs.readFileSync(allYearsDataFileName));
-    allYearsJson = JSON.parse(resultData);
-
+    resultData = JSON.parse(allYearsJson);;
+    fs.writeFileSync(allYearsDataFileName, allYearsJson);   // write json file
 
     console.log("ori")
     console.log(oriYearsData)
     console.log("*************")
 
     console.log("TEST")
-    console.log(allYearsJson)
+    console.log(resultData)
     
   }).then(function(){   
 
     var oriYearsDataLoss = oriYearsData;  
-    var newerData = allYearsJson;
+    var newerData = resultData;
     Object.keys(oriYearsDataLoss).forEach(function(key) {
       delete newerData[key];
     })
@@ -264,7 +243,7 @@ const getNewerData = function(){
     console.log(newerData);
 
     downloadByNewerData(newerData);
-
+    
     // console.log(oriYearsData);
   }).catch((err) => {
     console.log(err);
@@ -279,8 +258,6 @@ const setScrapPromise = function(){
     Promise.all([setAirlinesLink()]).then((getData) => {
       allYearsJson = getData;
 
-      // we can add difference check
-      // fs.writeFileSync(allYearsDataFileName, allYearsJson);
       resolve(allYearsJson);
     }).catch((err) => {
       console.log(err.message)
