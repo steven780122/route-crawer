@@ -21,12 +21,16 @@ app.use("/users", function(req, res, next){
 
 app.get('/downloadAll/', function(req, res) {
   // Add scrap first....
-  setScrapPromise().then((allYearsJson) => {   
+  setScrapPromise().then((allYearsJson) => {
+    fs.writeFileSync(allYearsDataFileName, allYearsJson);   
     fs.stat(allYearsDataFileName, function(err, stat) {
       if(err == null) {
         try{
           console.log('File exists');
-          var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
+          // var data = JSON.parse(fs.readFileSync(allYearsDataFileName));
+          
+          // console.log(JSON.parse(allYearsJson));
+          var data = JSON.parse(allYearsJson);
     
           // download by promise
           var downloadPromiseArr = [];
@@ -125,7 +129,7 @@ const downloadByNewerData = function(newerData){
         // var filename =  downloadLink.split('/').pop();
         // var dest = './downloads/' + year + month + '.' + finalFileType;
         // console.log('Downloading ' + filename);  
-
+        console.log("XDDDDD")
         var downloadLink = processDownloadLink(newerData, year, month).downloadLink;
         var dest = processDownloadLink(newerData, year, month).dest;
         downloadPromiseArr.push(downloadByPromise(encodeURI(downloadLink), dest));
@@ -239,14 +243,25 @@ const getNewerData = function(){
   setScrapPromise().then((resultData) => {
     oriYearsData = JSON.parse(fs.readFileSync(allYearsDataFileName));
     allYearsJson = JSON.parse(resultData);
+
+
+    console.log("ori")
+    console.log(oriYearsData)
+    console.log("*************")
+
+    console.log("TEST")
+    console.log(allYearsJson)
+    
   }).then(function(){   
 
-    var oriYearsDataLoss = JSON.parse(fs.readFileSync(allYearsDataFileNameLoss));  
-    // loop 
-    var newerData = oriYearsData;
+    var oriYearsDataLoss = oriYearsData;  
+    var newerData = allYearsJson;
     Object.keys(oriYearsDataLoss).forEach(function(key) {
       delete newerData[key];
     })
+
+    console.log("NEW!!")
+    console.log(newerData);
 
     downloadByNewerData(newerData);
 
@@ -258,14 +273,14 @@ const getNewerData = function(){
   return newerData;
 }
 
-
+// only scrap without writing file
 const setScrapPromise = function(){
   return new Promise(function (resolve, reject) {
     Promise.all([setAirlinesLink()]).then((getData) => {
       allYearsJson = getData;
 
       // we can add difference check
-      fs.writeFileSync(allYearsDataFileName, allYearsJson);
+      // fs.writeFileSync(allYearsDataFileName, allYearsJson);
       resolve(allYearsJson);
     }).catch((err) => {
       console.log(err.message)
