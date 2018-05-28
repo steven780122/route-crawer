@@ -10,6 +10,8 @@ const app = express();
 const yearsUrl = "http://www.caa.gov.tw/big5/content/index.asp?sno=927"
 const allYearsDataFileName = "allYearsData.json"
 const allYearsDataFileNameLoss = "allYearsData-loss2018.json"
+const util = require('util');
+const _ = require('lodash');
 
 
 app.use(express.static('views'))
@@ -199,7 +201,7 @@ const downloadByPromise = function(url, dest){
 // };  
 
 app.get('/downloadNewData', function(req, res){
-  var _ = getNewerData();
+  getNewerData();
   res.send("OK");
 });
 
@@ -224,20 +226,20 @@ const getNewerData = function(){
     resultData = JSON.parse(allYearsJson);;
     fs.writeFileSync(allYearsDataFileName, allYearsJson);   // write json file
 
-    console.log("ori")
-    console.log(oriYearsData)
-    console.log("*************")
-
-    console.log("TEST")
-    console.log(resultData)
+    // console.log("ori")
+    // console.log(util.inspect(oriYearsData, false, null))
+    // console.log("*************")
+    // console.log("TEST")
+    // console.log(util.inspect(resultData, false, null))
     
   }).then(function(){   
-
+    // handle diff json obj
     var oriYearsDataLoss = oriYearsData;  
-    var newerData = resultData;
-    Object.keys(oriYearsDataLoss).forEach(function(key) {
-      delete newerData[key];
-    })
+    var newerData = getDiffData(oriYearsData, resultData);
+    
+    // Object.keys(oriYearsDataLoss).forEach(function(key) {
+    //   delete newerData[key];
+    // })
 
     console.log("NEW!!")
     console.log(newerData);
@@ -251,6 +253,33 @@ const getNewerData = function(){
   });
   return newerData;
 }
+
+
+// get two json diff 
+const getDiffData = function(oriData, scrapData){
+  var oriDataTemp = oriData;  
+  var scrapDataTemp = scrapData;
+  try{
+    Object.keys(oriDataTemp).forEach(function(yearKey) {
+      if(_.isEqual(oriDataTemp[yearKey], scrapDataTemp[yearKey])){
+        delete scrapDataTemp[yearKey];
+      }else{
+        // if not the same
+        Object.keys(oriDataTemp[yearKey]["Data"]).forEach(function(monthKey) {
+          if(oriDataTemp[yearKey]["Data"].hasOwnProperty(monthKey)){
+            delete scrapDataTemp[yearKey]["Data"][monthKey];
+          }
+        })      
+      }
+    })
+  }catch(err){
+    console.log(err);
+  }
+  
+  // console.log(util.inspect(scrapDataTemp, false, null))
+  return scrapDataTemp;
+}
+
 
 // only scrap without writing file
 const setScrapPromise = function(){
