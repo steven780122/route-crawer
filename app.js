@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+var schedule = require ( 'node-schedule' ); 
 var app = express();
 
 // view engine setup
@@ -37,5 +37,17 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+
+
+var rule = new schedule.RecurrenceRule(); 
+rule.dayOfWeek = [0 , 5];    
+rule.second = 30 ; 
+ 
+var j = schedule.scheduleJob ( rule , function (){ 
+    console.log ( 'Today is recognized by Rebecca Black!' );
+});
+
+
 
 module.exports = app;

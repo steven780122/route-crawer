@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('test-route2:server');
 var http = require('http');
+var schedule = require('node-schedule'); 
+var request = require('request')
 
 /**
  * Get port from environment and store in Express.
@@ -87,4 +89,31 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
+
+
+// 
+  // console.log(addr.port);
+
+
+
+  
+  var schedule = require('node-schedule');
+  var rule = new schedule.RecurrenceRule();
+  rule.second = 30;
+  
+  var j = schedule.scheduleJob(rule, function(){
+    console.log('The answer to life, the universe, and everything!');
+
+    request({
+      url: 'http://127.0.0.1:' + addr.port + '/downloadByYearMonth/2011/01', 
+      method: "GET"
+    }, function (error, response, body) {
+      if (error || !body) {
+        console.log(error);
+        return;
+      }
+    })
+  });
+
+
 }
