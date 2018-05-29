@@ -10,9 +10,19 @@ const _ = require('lodash');
 const router = express.Router();
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+// router.get('/', function(req, res, next) {
+//   res.render('index', { title: 'Express' });
+// });
+
+
+router.get('/home', function(req, res, next) {
+  setScrapPromise().then((allYearsJson) => {
+    res.render('index', { allYearsJson: allYearsJson });
+  }).catch((err) => {
+    res.send(err.toString());
+  });
 });
+
 
 router.get('/scrap', function(req, res) {
   setScrapPromise().then((allYearsJson) => {
