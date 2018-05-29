@@ -1,20 +1,18 @@
 {
-  "name": "route-crawler",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "test-route2",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www"
   },
-  "repository": {
-    "type": "git",
-    "url": "http://git.starlux-airlines.com/1700485/route-crawler.git"
-  },
-  "author": "stevenhsiao",
-  "license": "ISC",
   "dependencies": {
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "ejs": "~2.5.7",
+    "express": "~4.16.0",
+    "http-errors": "~1.6.2",
+    "morgan": "~1.9.0",
     "cheerio": "^1.0.0-rc.2",
-    "express": "^4.16.3",
     "lodash": "^4.17.10",
     "request": "^2.85.0"
   }
