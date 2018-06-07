@@ -1,9 +1,13 @@
 const express = require('express');
 const myScript = require('./scrap');
+const myScriptNew = require('./scrap_new');
 const request = require('request');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const yearsUrl = "http://www.caa.gov.tw/big5/content/index.asp?sno=927";
+
+const years106UpUrl = "http://www.caa.gov.tw/big5/content/index.asp?sno=969";
+
 const allYearsDataFileName = "allYearsData.json";
 const util = require('util');
 const _ = require('lodash');
@@ -25,12 +29,22 @@ router.get('/home', function(req, res, next) {
 
 
 router.get('/scrap', function(req, res) {
-  setScrapPromise().then((allYearsJson) => {
+  setScrapPromise(setAirlinesLink).then((allYearsJson) => {
     res.send(allYearsJson);
   }).catch((err) => {
     res.send(err.toString());
   });
 })
+
+
+router.get('/scrapSimple', function(req, res) {
+  setScrapPromise(setSimpleAirlinesLink).then((allYearsJson) => {
+    res.send(allYearsJson);
+  }).catch((err) => {
+    res.send(err.toString());
+  });
+})
+
 
 router.get('/downloadAll/', function(req, res) {
   // Add scrap first....
@@ -123,12 +137,12 @@ router.get('/downloadNewData', function(req, res){
 
 
 // only scrap without writing file
-const setScrapPromise = function(){
+const setScrapPromise = function(setLink){
   return new Promise(function (resolve, reject) {
-    Promise.all([setAirlinesLink()]).then((getData) => {
+    Promise.all([setLink()]).then((getData) => {
       allYearsJson = getData;
-
       resolve(allYearsJson);
+    
     }).catch((err) => {
       console.log(err.message)
       reject(err);
@@ -137,6 +151,48 @@ const setScrapPromise = function(){
 }
 
 
+// parsing simple data
+const setSimpleAirlinesLink = function () {
+  return new Promise(function (resolve, reject) {
+    var allYearsJson = {};  
+      request({
+        url: years106UpUrl,
+        // url: yearsUrl,
+        method: "GET"
+      }, function (error, response, body) {
+        if (error || !body) {
+          console.log(error);
+          return;
+        }
+        const $ = cheerio.load(body, {decodeEntities: false}); // 載入 body     
+        var yearsLink = myScriptNew.getYearsLink($);
+        console.log(yearsLink);
+        
+        
+        
+        // get all promise object
+        // var yearsStrArr = Object.keys(yearsLink);
+        // var yearsPromiseFunctionParseArr = [];
+        // var arrayLength = yearsStrArr.length;
+        // for (var yearIdx = 0; yearIdx < arrayLength; yearIdx++) {
+        //   yearsPromiseFunctionParseArr.push(myScriptNew.getPromiseYearContent(yearsLink, yearsStrArr[yearIdx]));
+        // }
+
+        // Promise.all(yearsPromiseFunctionParseArr).then((yearsMonthesJsonArray) => {
+        //   // need merge to one json
+        //   allYearsJson = mergeYearsMonthesJson(yearsLink, yearsMonthesJsonArray);
+        //   resolve(allYearsJson);
+        // }).catch((err) => {
+        //   console.log(err.message)
+        // })
+      });
+    });
+  };
+
+
+
+
+// parsing complete data
 const setAirlinesLink = function () {
   return new Promise(function (resolve, reject) {
     var allYearsJson = {};  
